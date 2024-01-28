@@ -140,7 +140,9 @@ function updateState(name, value, common) {
             adapter.log.warn(e);
         }
         try {
-            adapter.setState(id, value, true);
+            if (value != undefined) {
+                adapter.setState(id, value, true);
+            }
         } catch (e) {
             adapter.log.warn(e);
         }
