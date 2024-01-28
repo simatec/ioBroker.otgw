@@ -8,12 +8,12 @@
 /*jslint node: true */
 'use strict';
 
-const utils =    require(__dirname + '/lib/utils'); // Get common adapter utils
+const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 const otgw = require('./lib/otg_api');
 let otgwapi;
 const adapter = new utils.Adapter('otgw');
 const controlStates = [
-    { 
+    {
         id: 'command',
         name: 'Send command to OTGW',
         icon: undefined,
@@ -22,7 +22,7 @@ const controlStates = [
         read: false,
         type: 'string',
     },
-    { 
+    {
         id: 'command_response',
         name: 'Response on command from OTGW',
         icon: undefined,
@@ -69,12 +69,12 @@ function onConnect(data) {
 
 function onUpdate(name, value) {
     const common = {
-        type: typeof(value),
+        type: typeof (value),
     };
     updateState(name, value, common);
 }
 
-function recreateStates(){
+function recreateStates() {
     controlStates.forEach((statedesc) => {
         const common = {
             name: statedesc.name,
@@ -93,7 +93,7 @@ function recreateStates(){
 
 
 function updateState(name, value, common) {
-    let new_common = {name: name};
+    let new_common = { name: name };
     let id = name;
     if (common != undefined) {
         if (common.name != undefined) {
@@ -128,14 +128,22 @@ function updateState(name, value, common) {
         }
     }
     // check if state exist
-    adapter.getObject(id, function(err, stobj) {
+    adapter.getObject(id, function (err, stobj) {
         if (stobj) {
             // update state - not change name and role (user can it changed)
             delete new_common.name;
             delete new_common.role;
         }
-        adapter.extendObject(id, {type: 'state', common: new_common});
-        adapter.setState(id, value, true);
+        try {
+            adapter.extendObject(id, { type: 'state', common: new_common });
+        } catch (e) {
+            adapter.log.warn(e);
+        }
+        try {
+            adapter.setState(id, value, true);
+        } catch (e) {
+            adapter.log.warn(e);
+        }
     });
 }
 
@@ -149,13 +157,13 @@ adapter.on('stateChange', function (id, state) {
                 otgwapi.sendCommand(state.val)
                     .then((resp) => {
                         if (resp == true) {
-                            adapter.setState(id+'_response', 'OK', true);
+                            adapter.setState(id + '_response', 'OK', true);
                         }
-                        adapter.log.debug('Command response:' + JSON.stringify(resp)); 
+                        adapter.log.debug('Command response:' + JSON.stringify(resp));
                     })
                     .catch((err) => {
                         adapter.log.debug('Command error:' + JSON.stringify(err));
-                        adapter.setState(id+'_response', JSON.stringify(err), true);
+                        adapter.setState(id + '_response', JSON.stringify(err), true);
                     });
                 break;
         }
@@ -165,17 +173,17 @@ adapter.on('stateChange', function (id, state) {
 
 function main() {
     adapter.subscribeStates('*');
-	const host = adapter.config.host;
-	const port = adapter.config.port;
-	if (host && port) {
-    	adapter.log.info(`Start conncet to ${host}:${port}`);
-    	otgwapi = new otgw();
+    const host = adapter.config.host;
+    const port = adapter.config.port;
+    if (host && port) {
+        adapter.log.info(`Start conncet to ${host}:${port}`);
+        otgwapi = new otgw();
         otgwapi.setDebug(3); // APP & API
-		otgwapi.on('debug', debugToAdapter);
-		otgwapi.on('found', onConnect);
+        otgwapi.on('debug', debugToAdapter);
+        otgwapi.on('found', onConnect);
         otgwapi.on('update', onUpdate);
         otgwapi.openPort(host, Number(port));
     } else {
-    	adapter.log.error('Empty host or port. Please configure adapter first.');
+        adapter.log.error('Empty host or port. Please configure adapter first.');
     }
 }
