@@ -1,7 +1,5 @@
 ![Logo](admin/otgw.png)
 
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
-
 # ioBroker.otgw
 
 OpenTherm Gateway adapter
@@ -10,24 +8,18 @@ for http://otgw.tclcode.com/ project
 
 
 ## Changelog
+<!-- ### __WORK IN PROGRESS__ -->
+### __WORK IN PROGRESS__
+* (simatec) Dependencies updated
+* (simatec) Github Actions added
 
-
-## Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore -->
-| [<img src="https://avatars0.githubusercontent.com/u/8360230?v=4" width="100px;" alt="Илья Киров"/><br /><sub><b>Илья Киров</b></sub>](https://t.me/goofyk)<br />[🚇](#infra-kirovilya "Infrastructure (Hosting, Build-Tools, etc)") [⚠️](https://github.com/kirovilya/ioBroker.otgw/commits?author=kirovilya "Tests") [💻](https://github.com/kirovilya/ioBroker.otgw/commits?author=kirovilya "Code") [🚧](#maintenance-kirovilya "Maintenance") |
-| :---: |
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!
-
-If you contributed in any way, but I've forgotten to add you to this list, please shoot me an e-mail!
+### 0.1.0 (2018-01-01)
+* (kirovilya) initial adapter"
 
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2018 Kirov Ilya <kirovilya@gmail.com>
+Copyright (c) 2018 - 2024 Kirov Ilya <kirovilya@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
