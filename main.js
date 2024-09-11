@@ -8,10 +8,13 @@
 /*jslint node: true */
 'use strict';
 
-const utils = require(__dirname + '/lib/utils'); // Get common adapter utils
+// @ts-ignore
+const utils = require('@iobroker/adapter-core');
 const otgw = require('./lib/otg_api');
 let otgwapi;
-const adapter = new utils.Adapter('otgw');
+//const adapter = new utils.Adapter('otgw');
+let adapter;
+const adapterName = require('./package.json').name.split('.').pop();
 const controlStates = [
     {
         id: 'command',
@@ -33,20 +36,60 @@ const controlStates = [
     },
 ];
 
+function startAdapter(options) {
 
-adapter.on('unload', function (callback) {
-    try {
-        adapter.log.info('cleaned everything up...');
-        callback();
-    } catch (e) {
-        callback();
-    }
-});
+    options = options || {};
+    Object.assign(options, { name: adapterName });
+
+    adapter = new utils.Adapter(options);
+    adapter.on('unload', function (callback) {
+        try {
+            adapter.log.info('cleaned everything up...');
+            callback();
+        } catch (e) {
+            callback();
+        }
+    });
 
 
-adapter.on('ready', function () {
-    main();
-});
+    adapter.on('ready', function () {
+        main();
+    });
+
+    adapter.on('stateChange', function (id, state) {
+        // you can use the ack flag to detect if it is status (true) or command (false)
+        if (state && !state.ack) {
+            adapter.log.debug('User stateChange ' + id + ' ' + JSON.stringify(state));
+            const stateKey = id.split('.')[2];
+            switch (stateKey) {
+                case 'command':
+                    otgwapi.sendCommand(state.val)
+                        .then((resp) => {
+                            if (resp == true) {
+                                adapter.setState(id + '_response', 'OK', true);
+                            }
+                            adapter.log.debug('Command response:' + JSON.stringify(resp));
+                        })
+                        .catch((err) => {
+                            adapter.log.debug('Command error:' + JSON.stringify(err));
+                            adapter.setState(id + '_response', JSON.stringify(err), true);
+                        });
+                    break;
+            }
+        }
+    });
+
+    adapter.on('unload', (callback) => {
+
+        try {
+            adapter.log.info('cleaned everything up...');
+            callback();
+        } catch (err) {
+            // @ts-ignore
+            callback(err);
+        }
+    });
+}
 
 function debugToAdapter(data) {
     adapter.log.debug(data.msg);
@@ -90,7 +133,6 @@ function recreateStates() {
         updateState(statedesc.id, undefined, common);
     });
 }
-
 
 function updateState(name, value, common) {
     let new_common = { name: name };
@@ -149,30 +191,6 @@ function updateState(name, value, common) {
     });
 }
 
-adapter.on('stateChange', function (id, state) {
-    // you can use the ack flag to detect if it is status (true) or command (false)
-    if (state && !state.ack) {
-        adapter.log.debug('User stateChange ' + id + ' ' + JSON.stringify(state));
-        const stateKey = id.split('.')[2];
-        switch (stateKey) {
-            case 'command':
-                otgwapi.sendCommand(state.val)
-                    .then((resp) => {
-                        if (resp == true) {
-                            adapter.setState(id + '_response', 'OK', true);
-                        }
-                        adapter.log.debug('Command response:' + JSON.stringify(resp));
-                    })
-                    .catch((err) => {
-                        adapter.log.debug('Command error:' + JSON.stringify(err));
-                        adapter.setState(id + '_response', JSON.stringify(err), true);
-                    });
-                break;
-        }
-    }
-});
-
-
 function main() {
     adapter.subscribeStates('*');
     const host = adapter.config.host;
@@ -188,4 +206,11 @@ function main() {
     } else {
         adapter.log.error('Empty host or port. Please configure adapter first.');
     }
+}
+
+// @ts-ignore parent is a valid property on module
+if (module.parent) {
+    module.exports = startAdapter;
+} else {
+    startAdapter();
 }
